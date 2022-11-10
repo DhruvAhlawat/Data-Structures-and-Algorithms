@@ -1,0 +1,104 @@
+def CompareValues(a,b): # eg essentially, the top of the heap would be the one that satisfies the opposite of this statement
+    if(a>b):
+        return True;
+    else:
+        return False;
+
+def ExchangeValues(l,i,j):
+    temp = l[i];
+    l[i] = l[j];
+    l[j] = temp;
+
+
+class PriorityQueue: #Uses Heap, (min or max depends on the Compare function)
+    
+    Representation = []; #uses a representation list to store the values of the almost complete binaryTree or Heap
+    locationStore = []; #ith element stores the location of the ith particles collision details in the RepresentationList.
+
+    size = 0;
+    def __init__(self) -> None:
+        self.Representation = [];
+        self.size = 0;
+        pass
+    def getParentIndex(self,u):
+        return (int((u-1)//2));
+    def getRightChildIndex(self,u):
+        return 2*u+2;
+    def getLeftChildIndex(self,u):
+        return 2*u+1;
+    def getParentValue(self,u):
+        return self.Representation[int((u-1)//2)];
+    
+    def __len__(self):
+        return len(self.Representation);
+    
+    def HeapUp(self,u):
+        #so u is the position of this particular node in the Representation List.
+        #gotta heapUp.
+        if(u == 0):
+            return u;
+        while(CompareValues(self.getParentValue(u),self.Representation[u])):
+            p = self.getParentValue(u); #stores the value of the parent of the element
+            cur = self.Representation[u]; #stores the value of the element
+            #if the parent p is not <= cur, then we exchange their positions.
+            self.Representation[self.getParentIndex(u)] = cur;
+            self.Representation[u] = p;
+            u = self.getParentIndex(u); 
+            #changed u to correspond to its correct location after exchanging.
+            if(u <= 0): #if we reached the top of the Heap, we break.
+                return u;
+        return u;
+    #now that HeapUp is defined, we can make a system to enqueue.
+    def Enqueue(self,x):
+        #pos = self.size;
+        self.Representation.append(x);
+        pos = len(self.Representation) - 1; #the position of the appended item(the new element x);
+        if(pos > 0):
+            self.HeapUp(pos);
+
+
+    def BuildHeap(self,l):
+        n = len(l);
+        self.Representation = [0]*n;
+        self.locationStore = [0]*n; 
+        for i in range(n-1,-1,-1):
+            self.Representation[i] = l[i];
+            self.locationStore[l[i][1]] = i; #considering the second element of the l[i] to be the index of the particle
+            self.HeapDown(i);
+            #simple O(n) implementation of Fast BuildHeap using HeapDown.
+
+    def HeapDown(self,u): #a recursive function which heaps down the uth node to its correct location
+        c1 = 2*u + 1;
+        c2 = 2*u + 2;
+        if(len(self.Representation) > c2):
+            cmin = c2 if CompareValues(self.Representation[c1],self.Representation[c2]) else c1; #cmin is the index of the minimum child,
+            #if both children have equal values, we return c1;
+        elif(len(self.Representation) == c2):
+            #only one child exists, in this case, we do the same thing    
+            cmin = c1;
+        else:
+            #else, no child exists of the current node, hence we cannot heap it down further, so we return.
+            return u;
+        if(CompareValues(self.Representation[u],self.Representation[cmin])):# if uth element is greater than its children.
+            # temp = self.Representation[u];
+            # self.Representation[u] = self.Representation[cmin];
+            # self.Representation[cmin] = temp; #exchange values of the child and the parent, so the new parent is smaller than its children
+            ExchangeValues(self.locationStore,self.Representation[u][1],self.Representation[cmin][1]); #exchanges values of their location store as well
+            ExchangeValues(self.Representation,u,cmin);
+            u = cmin;#new location of the current node. Also gotta HeapDown on this one again.
+            return self.HeapDown(u); #heaps down again, only if we changed its position in this recursion.
+        else:
+            return u;
+    
+    #with HeapDown done, we can define an extract min
+    
+    def GetRoot(self):
+        return self.Representation[0];
+    def ExtractRoot(self):
+        m = self.Representation[0];
+        lastPos = len(self.Representation)-1;
+        self.Representation[0] = self.Representation[lastPos]; #brings the last node to the top.
+        self.Representation.pop();
+        self.HeapDown(0); #then we heap it down to its correct location.
+
+        return m; #then we return the minimum value    
